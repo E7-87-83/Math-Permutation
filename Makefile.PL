@@ -17,11 +17,27 @@ my %WriteMakefileArgs = (
         'Test::More' => '0',
     },
     PREREQ_PM => {
-        #'ABC'              => '1.6',
-        #'Foo::Bar::Module' => '5.0401',
+        'List::Util'              => '1.50',
+        'Carp' => '0',
     },
     dist  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
     clean => { FILES => 'Math-Permutation-*' },
+
+    (( eval { ExtUtils::MakeMaker->VERSION(6.46) } ) ?
+      ( META_MERGE => {
+         'build_requires' => {
+            'ExtUtils::MakeMaker' => 0,
+            'Test::More'          => 0.88
+         },
+         'resources' => {
+            'bugtracker' => 'https://github.com/E7-87-83/Math-Permutation/issues',
+            'homepage'   => 'https://github.com/E7-87-83/Math-Permutation',
+            'license'    => 'https://dev.perl.org/licenses/',
+            'repository' => 'https://github.com/E7-87-83/Math-Permutation.git'
+         },
+        }
+    ))
+
 );
 
 # Compatibility with old versions of ExtUtils::MakeMaker

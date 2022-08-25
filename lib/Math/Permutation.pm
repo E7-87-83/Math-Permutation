@@ -40,6 +40,15 @@ sub clone {
     }, $class;
 }
 
+sub init {
+    my ($class) = @_;
+    my $n = $_[1];
+    bless {
+        _wrepr => [1..$n],
+        _n => $n,
+    }, $class;
+}
+
 sub wrepr {
     my ($class) = @_;
     my $wrepr = $_[1] || [1];
@@ -119,21 +128,7 @@ sub cycles {
     }
     # end: checking
     if ($check) {
-        my %hash;
-        $hash{$_} = 0 for (1..$n);
-        for my $c (@cycles) {
-            if (scalar @{$c} > 1) {
-                $hash{$c->[$_]} = $c->[$_+1] for (0..scalar @{$c} - 2);
-                $hash{$c->[-1]} = $c->[0];
-            }
-            elsif (scalar @{$c} == 1) {
-                $hash{$c->[0]} = $c->[0];
-            }
-        }
-        foreach (keys %hash) {
-            $hash{$_} = $_ if ($hash{$_} == 0);
-        }
-        $wrepr = [ map {$hash{$_}} (1..$n) ];
+        $wrepr = _cycles_to_wrepr($n, [@cycles])
     }
     bless {
         _wrepr => $wrepr,
@@ -141,6 +136,25 @@ sub cycles {
     }, $class;
 }
 
+sub _cycles_to_wrepr {
+    my $n = $_[0];
+    my @cycles = $_[1]->@*;
+    my %hash;
+    $hash{$_} = 0 for (1..$n);
+    for my $c (@cycles) {
+        if (scalar @{$c} > 1) {
+            $hash{$c->[$_]} = $c->[$_+1] for (0..scalar @{$c} - 2);
+            $hash{$c->[-1]} = $c->[0];
+        }
+        elsif (scalar @{$c} == 1) {
+            $hash{$c->[0]} = $c->[0];
+        }
+    }
+    foreach (keys %hash) {
+        $hash{$_} = $_ if ($hash{$_} == 0);
+    }
+    return [ map {$hash{$_}} (1..$n) ];
+}
 
 sub cycles_with_len {
     my ($class) = @_;
@@ -185,6 +199,26 @@ sub swap {
     my $wrepr = $_[0]->{_wrepr};
     ($wrepr->[$i-1], $wrepr->[$j-1]) = ($wrepr->[$j-1], $wrepr->[$i-1]);
     $_[0]->{_wrepr} = $wrepr;
+}
+
+sub mul {
+    my $n = $_[0]->{_n};
+    my @p = $_[0]->{_wrepr}->@*;
+    my @q = $_[1]->{_wrepr}->@*;
+    return [] if scalar @q != $n;
+    my @qp;
+    push @qp, $q[$p[$_-1]-1] for 1..$n;
+    $_[0]->{_wrepr} = [@qp];
+}
+
+sub inverse {
+    my $n = $_[0]->{_n};
+    my @cycles = $_[0]->cyc->@*;
+    my @new_cycles;
+    foreach (@cycles) {
+        push @new_cycles, [reverse @{$_}];
+    }
+    $_[0]->{_wrepr} = _cycles_to_wrepr($n, [@new_cycles]);
 }
 
 sub next {
@@ -356,6 +390,19 @@ sub inversion {
         push @inv, $i;
     }
     return [@inv];
+}
+
+sub matrix {
+    my $mat;
+    my $n = $_[0]->{_n};
+    my @w = $_[0]->{_wrepr}->@*;
+    for my $i (0..$n-1) {
+        for my $j (0..$n-1) {
+            $mat->[$i]->[$j] = 0;
+        }
+    }
+    $mat->[$w[$_]-1]->[$_] = 1 for (0..$n-1);
+    return $mat;
 }
 
 sub fixed_points {
