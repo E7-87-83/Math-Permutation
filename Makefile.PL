@@ -36,7 +36,7 @@ my %WriteMakefileArgs = (
             'repository' => 'https://github.com/E7-87-83/Math-Permutation.git'
          },
         }
-    ))
+    ) : () )
 
 );
 
