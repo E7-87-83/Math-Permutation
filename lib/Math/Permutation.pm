@@ -9,11 +9,11 @@ use feature 'say';
 
 
 # supportive math function
-sub lcm {
-    return reduce { $a*$b/gcd($a,$b) } @_;
+sub _lcm {
+    return reduce { $a*$b/_gcd($a,$b) } @_;
 }
 
-sub gcd {    # gcd of two positive integers
+sub _gcd {    # _gcd of two positive integers
     my $x = min($_[0], $_[1]);
     my $y = max($_[0], $_[1]);
     while ($x != 0) {
@@ -22,7 +22,7 @@ sub gcd {    # gcd of two positive integers
     return $y;
 }
 
-sub factorial {
+sub _factorial {
     my $ans = 1;
     for (1..$_[0]) {
        $ans *= $_; 
@@ -183,6 +183,7 @@ sub sprint_tabular {
 sub sprint_cycles {
     my @cycles = $_[0]->cyc->@*;
     @cycles = grep { scalar @{$_} > 1 } @cycles;
+    return "()" if scalar @cycles == 0;
     my @p_cycles = map {"(".(join " ", @{$_}). ")"} @cycles;
     return join " ", @p_cycles;
 }
@@ -201,7 +202,7 @@ sub swap {
     $_[0]->{_wrepr} = $wrepr;
 }
 
-sub mul {
+sub comp {
     my $n = $_[0]->{_n};
     my @p = $_[0]->{_wrepr}->@*;
     my @q = $_[1]->{_wrepr}->@*;
@@ -221,7 +222,7 @@ sub inverse {
     $_[0]->{_wrepr} = _cycles_to_wrepr($n, [@new_cycles]);
 }
 
-sub next {
+sub nxt {
     my $n = $_[0]->{_n};
     my @w = $_[0]->{_wrepr}->@*;
     my @rw = reverse @w;
@@ -258,7 +259,7 @@ sub unrank {
     my $n = $_[1];
     my @list = (1..$n);
     my $r = $_[2]-1;
-    my $fact = factorial($n-1);
+    my $fact = _factorial($n-1);
     my @unused_list = sort {$a<=>$b} @list;
     my @p = ();
     for my $i (0..$n-1) {
@@ -331,7 +332,7 @@ sub elems {
 sub rank {
     my @list = $_[0]->{_wrepr}->@*;
     my $n = scalar @list;
-    my $fact = factorial($n-1);
+    my $fact = _factorial($n-1);
     my $r = 1;
     my @unused_list = sort {$a<=>$b} @list;
     for my $i (0..$n-2) {
@@ -359,7 +360,7 @@ sub index {
 
 sub order {
     my @cycles = $_[0]->cyc->@*;
-    return lcm(map {scalar @{$_}} @cycles);
+    return _lcm(map {scalar @{$_}} @cycles);
 }
 
 sub is_even {
@@ -428,73 +429,153 @@ our $VERSION = '0.01';
 
 =head1 SYNOPSIS
 
-Quick summary of what the module does.
-
-Perhaps a little code snippet.
-
     use Math::Permutation;
 
-    my $foo = Math::Permutation->new();
-    ...
+    my $foo = Math::Permutation->cycles([[1,2,6,7], [3,4,5]]);
+    say $foo->sprint_wrepr;
+    # "2,6,4,5,3,7,1"
+
+    my $bar = Math::Permutation->unrank(5, 19);
+    $bar->comp($foo);
+    say $bar->sprint_cycles;
+    # (2 5 4 3)
+    # Note that there is no canonical cycle representation in this module,
+    # so each time the output may be slightly different.
+
+    my $goo = Math::Permutation->clone($foo);
+    say $goo->sprint_cycles;
+    # (1 2 6 7) (4 5 3)
+
+    $foo->inverse;
+    say $foo->sprint_cycles;
+    # (4 3 5) (1 7 6 2)
+
+    $foo->comp($goo);
+    say $foo->sprint_cycles;
+    # ()
+
+    say $bar->rank; # 19
+    $bar->prev;
+    say $bar->rank; # 18
+    say $goo->rank; # 1264
+    $goo->nxt;
+    say $goo->rank; # 1265
+
+    say $goo->is_even; # 0
+    say $goo->sgn;     # -1
+
+    use Data::Dump qw/dump/;
+    say $bar->sprint_wrepr;
+    dump $bar->matrix;
+
+    # "1,4,5,3,2"
+    # [
+    #   [1, 0, 0, 0, 0],
+    #   [0, 0, 0, 0, 1],
+    #   [0, 0, 0, 1, 0],
+    #   [0, 1, 0, 0, 0],
+    #   [0, 0, 1, 0, 0],
+    # ]
+
+        
+        
 
 =head1 METHODS
 
 =head2 INITALIZE/GENERATE NEW PERMUTATION
 
-=over 1
+=over 4
 
-=item init($n)
+=item $p->init($n)
 
-=item wrepr([$a, $b, $c, ..., $m]) (one-line notation)
+Initialize $p with the identity permutation of $n elements.
 
-=item tabular([$A, $B, ... , $M), [$a, $b, $c, ..., $m]) (two-line form)
+=item $p->wrepr([$a, $b, $c, ..., $m])
 
-usually tabular([1..$n], [$p1, $p2, ..., $pn])
+Initialize $p with word representation of a permutation, a.k.a. one-line form.
 
-=item cycles([$a, $b, $c], [$d, $e], [$f, $g])
+=item $p->tabular([$a, $b, ... , $m], [$pa, $pb, $pc, ..., $pm])
 
-=item cycles_with_len($n, [$a, $b, $c], [$d, $e])
+Initialize $p with the rules of a permutation, with input of permutation on the first list,
+the output of permutation. If the first list is [1..$n], it is often called two-line form,
+and the second list would be the word representation.
 
-=item unrank($n, $i)
+=item $p->cycles([[$a, $b, $c], [$d, $e], [$f, $g]])
 
-=item random($n)
+=item $p->cycles_with_len($n, [[$a, $b, $c], [$d, $e], [$f, $g]])
+
+Initialize $p by the cycle notation. If the length is not specific, the length would be the largest element in the cycles.
+
+=item $p->unrank($n, $i)
+
+Initialize $p referring to the lexicological rank of all $n-permutations. $i must be between 1 and $n!.
+
+=item $p->random($n)
+
+Initialize $p by a randomly selected $n-permutation.
 
 =back
 
 =head2 DISPLAY THE PERMUTATION
 
-=over 1
+=over 4
 
-=item sprint_wrepr()
+=item $p->sprint_wrepr()
 
-=item sprint_tabular()
+Return a string displaying the word representation of $p.
 
-=item sprint_cycles()
+=item $p->sprint_tabular()
 
-=item sprint_cycles_full()
+Return a two-line string displaying the tabular form of $p.
+
+=item $p->sprint_cycles()
+
+Return a string with cycles of $p. One-cycles are omitted.
+
+=item $p->sprint_cycles_full()
+
+Return a string with cycles of $p. One-cycles are included.
 
 =back
 
 =head2 CLONE THE PERMUTATION
 
-clone($perm_obj)
+=over 4
+
+=item $p->clone($p_obj)
+
+clone the permutation $p_obj into $p.
+
+=back
 
 =head2 MODIFY THE PERMUTATION
 
-=over 1
+=over 4
 
 =item swap($i, $j)
 
-=item mul
+Swap the values of $i-position and $j-position.
 
-=item inverse()
+=item $p->comp($q)
 
+Composition of $p and $q, sometimes called multiplication of the permutations. 
+The resultant is $q $p (first do $p, then do $q).
 
-=item next()
+$p and $q must be permutations of same number of elements.
+
+=item $p->inverse()
+
+Inverse of $p.
+
+=item $p->nxt()
+
+The next permutation under the lexicological order of all $n-permutations.
 
 Caveat: may return [].
 
-=item prev()
+=item $p->prev()
+
+The previous permutation under the lexicological order of all $n-permutations.
 
 Caveat: may return [].
 
@@ -502,45 +583,68 @@ Caveat: may return [].
 
 =head2 PRORERTIES OF THE CURRENT PERMUTATION
 
-=over 1
+=over 4
 
-=item sigma($i)
+=item $p->sigma($i)
 
-=item rule()
+Return what $i is mapped to under $p.
 
-=item cyc()
+=item $p->rule()
 
-=item elems()
+Return the word representation of $p as a list.
 
-=item rank()
+=item $p->cyc()
 
-=item index()
+Return the cycle representation of $p as a list of list(s).
 
-=item order()
+=item $p->elems()
 
-=item is_even()
+Return the length of $p.
 
-0, 1
+=item $p->rank()
 
-=item is_odd()
+Return the lexicological rank of $p. See $p->unrank($n, $i).
 
-0, 1
+=item $p->index()
 
-=item sgn()
+Return the permutation index of $p.
 
-1, -1
+=item $p->order()
 
-=item inversion() - the inversion vector as a list
+Return the order of $p, i.e. how many times the permutation acts on itself
+and return the identity permutation.
 
-=item matrix()
+=item $p->is_even()
 
-=item fixed_points() - a list of the fixed points
+Return whether $p is an even permutation. Return 1 or 0.
+
+=item $p->is_odd()
+
+Return whether $p is an odd permutation. Return 1 or 0.
+
+=item $p->sgn()
+
+Return the signature of $p. +1 if $p is even, -1 if $p is odd.
+
+Another view is the determinant of the permutation matrix of $p.
+
+=item $p->inversion()
+
+Return the inversion sequence of $p as a list.
+
+=item $p->matrix()
+
+Return the permutation matrix of $p.
+
+=item $p->fixed_points()
+
+Return the list of fixed points of $p.
 
 =back
 
-=head1 SUBROUTINES/METHODS TO BE INPLEMENTED
+=head1 METHODS TO BE INPLEMENTED
 
-=over 1
+=over 4
 
 =item sqrt()
 
@@ -552,37 +656,37 @@ Caveat: may return [].
 
 =item coxeter_decomposition()
 
-=item mul( more than one permutations )
+=item comp( more than one permutations )
 
 =item reverse()
 
-Chapter 1, Patterns in Permutations and Words
+ref: Chapter 1, Patterns in Permutations and Words
 
 =item complement()  
 
-Chapter 1, Patterns in Permutations and Words
+ref: Chapter 1, Patterns in Permutations and Words
 
 =item is_irreducible()
 
-Chapter 1, Patterns in Permutations and Words
+ref: Chapter 1, Patterns in Permutations and Words
 
 =item num_of_occurrences_of_pattern()
 
-Chapter 1, Patterns in Permutations and Words
+ref: Chapter 1, Patterns in Permutations and Words
 
 =item contains_pattern()
 
-Chapter 1, Patterns in Permutations and Words
+ref: Chapter 1, Patterns in Permutations and Words
 
 =item avoids_pattern()
 
-Chapter 1, Patterns in Permutations and Words
+ref: Chapter 1, Patterns in Permutations and Words
 
-=item new_barred_pattern(  )
+including barred patterns
 
-Section 1.2, Patterns in Permutations and Words
+ref: Section 1.2, Patterns in Permutations and Words
 
-new_barred_pattern( [ -3,-1,5,-2,4 ] )
+Example: [ -3, -1, 5, -2, 4 ]
 
 =back
 
@@ -592,12 +696,7 @@ Cheok-Yin Fung, C<< <fungcheokyin at gmail.com> >>
 
 =head1 BUGS
 
-Please report any bugs or feature requests to C<bug-math-permutation at rt.cpan.org>, or through
-the web interface at L<https://rt.cpan.org/NoAuth/ReportBug.html?Queue=Math-Permutation>.  I will be notified, and then you'll
-automatically be notified of progress on your bug as I make changes.
-
-
-
+Please report any bugs or feature requests to L<https://github.com/E7-87-83/Math-Permutation/issues>.
 
 =head1 SUPPORT
 
@@ -631,24 +730,27 @@ The module has gained ideas from various sources:
 
 Opensource resources:
 
-https://github.com/scheinerman/Permutations.jl/blob/master/docs/src/index.md
+=over 4
 
-https://metacpan.org/pod/Math::GSL::Permutation
+=item * L<Julia Package Permutations.jl|https://github.com/scheinerman/Permutations.jl/blob/master/docs/src/index.md>
 
-https://maxima.sourceforge.io/docs/manual/maxima_singlepage.html#combinatorics_002dpkg
+=item * L<CPAN Module Math::GSL::Permutation|https://metacpan.org/pod/Math::GSL::Permutation>
+
+=item * L<Combinatorics features of Maxima|https://maxima.sourceforge.io/docs/manual/maxima_singlepage.html#combinatorics_002dpkg>
+
+=back
 
 Non-opensource resources:
 
-https://www.wolframalpha.com/
+=over 4
 
-Algebra, Michael Artin
+=item * L<Wolfram Alpha|https://www.wolframalpha.com/>
 
-Patterns in Permutations and Words, Sergey Kitaev
+=item * I<Algebra>, Michael Artin
 
-=head2 See Also
+=item * I<Patterns in Permutations and Words>, Sergey Kitaev
 
-https://en.wikipedia.org/wiki/Left_and_right_(algebra)
-
+=back
 
 =head1 LICENSE AND COPYRIGHT
 
