@@ -32,7 +32,7 @@ my %WriteMakefileArgs = (
          'resources' => {
             'bugtracker' => 'https://github.com/E7-87-83/Math-Permutation/issues',
             'homepage'   => 'https://github.com/E7-87-83/Math-Permutation',
-            'license'    => 'https://dev.perl.org/licenses/',
+            'license'    => 'https://mit-license.org/',
             'repository' => 'https://github.com/E7-87-83/Math-Permutation.git'
          },
         }
