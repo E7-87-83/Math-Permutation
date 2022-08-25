@@ -30,7 +30,10 @@ perldoc command.
 
 You can also look for information at:
 
-    RT, CPAN's request tracker (report bugs here)
+    GitHub Repository (welcome to report bugs on the section "Issues")
+        https://github.com/E7-87-83/Math-Permutation
+
+    RT, CPAN's request tracker
         https://rt.cpan.org/NoAuth/Bugs.html?Dist=Math-Permutation
 
     CPAN Ratings
