@@ -4,7 +4,7 @@ use 5.010;
 use strict;
 use warnings;
 use Carp;
-use List::Util qw/any uniq none all sum first max min/;
+use List::Util qw/tail any uniq none all sum first max min/;
 use feature 'say';
 
 
@@ -30,7 +30,15 @@ sub factorial {
     return $ans;
 }
 
-
+sub clone {
+    my ($class) = @_;
+    my $wrepr = $_[1]->{_wrepr};
+    my $n = $_[1]->{_n};
+    bless {
+        _wrepr => $wrepr,
+        _n => $n,
+    }, $class;
+}
 
 sub wrepr {
     my ($class) = @_;
@@ -158,17 +166,57 @@ sub sprint_tabular {
     . "|";
 }
 
-sub sprint_cycle_full {
+sub sprint_cycles {
+    my @cycles = $_[0]->cyc->@*;
+    @cycles = grep { scalar @{$_} > 1 } @cycles;
+    my @p_cycles = map {"(".(join " ", @{$_}). ")"} @cycles;
+    return join " ", @p_cycles;
+}
+
+sub sprint_cycles_full {
     my @cycles = $_[0]->cyc->@*;
     my @p_cycles = map {"(".(join " ", @{$_}). ")"} @cycles;
     return join " ", @p_cycles;
 }
 
-sub sprint_cycle {
-    my @cycles = $_[0]->cyc->@*;
-    @cycles = grep { scalar @{$_} > 1 } @cycles;
-    my @p_cycles = map {"(".(join " ", @{$_}). ")"} @cycles;
-    return join " ", @p_cycles;
+sub swap {
+    my $i = $_[1];
+    my $j = $_[2];
+    my $wrepr = $_[0]->{_wrepr};
+    ($wrepr->[$i-1], $wrepr->[$j-1]) = ($wrepr->[$j-1], $wrepr->[$i-1]);
+    $_[0]->{_wrepr} = $wrepr;
+}
+
+sub next {
+    my $n = $_[0]->{_n};
+    my @w = $_[0]->{_wrepr}->@*;
+    my @rw = reverse @w;
+    my $ind = 1;
+    while ($ind <= $#rw && $rw[$ind-1] < $rw[$ind]) {
+        $ind++;
+    }
+    return [] if $ind == scalar @w;
+    my @suffix = tail $ind, @w;
+    my $i = 1;
+    $i++ until $w[-$ind-1] < $suffix[-$i];
+    ($w[-$ind-1], $suffix[-$i]) = ($suffix[-$i], $w[-$ind-1]);
+    $_[0]->{_wrepr} = [ @w[0..$n-$ind-1], reverse @suffix ];
+}
+
+sub prev {
+    my $n = $_[0]->{_n};
+    my @w = $_[0]->{_wrepr}->@*;
+    my @rw = reverse @w;
+    my $ind = 1;
+    while ($ind <= $#rw && $rw[$ind-1] > $rw[$ind]) {
+        $ind++;
+    }
+    return [] if $ind == scalar @w;
+    my @suffix = tail $ind, @w;
+    my $i = 1;
+    $i++ until $w[-$ind-1] > $suffix[-$i];
+    ($w[-$ind-1], $suffix[-$i]) = ($suffix[-$i], $w[-$ind-1]);
+    $_[0]->{_wrepr} = [ @w[0..$n-$ind-1], reverse @suffix ];
 }
 
 sub unrank {
@@ -189,6 +237,24 @@ sub unrank {
     my $wrepr = [@p];
     bless {
         _wrepr => $wrepr,
+        _n => $n,
+    }, $class;
+}
+
+# Fisher-Yates shuffle
+sub random {
+    my ($class) = @_;
+    my $n = $_[1];
+    my @ori = (1..$n);
+    my @w;
+    for (1..$n) {
+        my $roll = int (rand() * scalar @ori);
+        push @w, $ori[$roll];
+        ($ori[$roll], $ori[-1]) = ($ori[-1], $ori[$roll]);
+        pop @ori;
+    }
+    bless {
+        _wrepr => [@w],
         _n => $n,
     }, $class;
 }
@@ -247,6 +313,16 @@ sub rank {
 # O(n^2) solution, translation of Python code on
 # https://tryalgo.org/en/permutations/2016/09/05/permutation-rank/
 
+sub index {
+    my $n = $_[0]->{_n};
+    my @w = $_[0]->{_wrepr}->@*;
+    my $ans = 0;
+    for my $j (0..$n-2) {
+        $ans += ($j+1) if $w[$j] > $w[$j+1];
+    }
+    return $ans;
+}
+
 sub order {
     my @cycles = $_[0]->cyc->@*;
     return lcm(map {scalar @{$_}} @cycles);
@@ -264,6 +340,30 @@ sub is_odd {
 
 sub sgn {
     return $_[0]->is_even ? 1 : -1;
+}
+
+sub inversion {
+    my $n = $_[0]->{_n};
+    my @w = $_[0]->{_wrepr}->@*;
+    my @inv;
+    for my $k (1..$n) {
+        my $i = 0;
+        my $j = 0;
+        while ($w[$j] != $k) {
+            $i++ if $w[$j] > $k;
+            $j++;
+        }
+        push @inv, $i;
+    }
+    return [@inv];
+}
+
+sub fixed_points {
+    my @fp;
+    for (1..$_[0]->{_n}) {
+        push @fp, $_ if $_[0]->{_wrepr}->[$_-1] == $_;
+    }
+    return [@fp];
 }
 
 =head1 NAME
@@ -328,6 +428,10 @@ usually tabular([1..$n], [$p1, $p2, ..., $pn])
 
 =back
 
+=head2 CLONE THE PERMUTATION
+
+clone($perm_obj)
+
 =head2 MODIFY THE PERMUTATION
 
 =over 1
@@ -336,17 +440,8 @@ usually tabular([1..$n], [$p1, $p2, ..., $pn])
 
 =item mul
 
-=back
-
-=head2 OBTAIN ANOTHER PERMUTATION FROM THE PERMUTATION
-
-=over 1
-
 =item inverse()
 
-=item sqrt()
-
-Caveat: may return [].
 
 =item next()
 
@@ -372,7 +467,7 @@ Caveat: may return [].
 
 =item rank()
 
-=item index() -- ???
+=item index()
 
 =item order()
 
@@ -399,6 +494,10 @@ Caveat: may return [].
 =head1 SUBROUTINES/METHODS TO BE INPLEMENTED
 
 =over 1
+
+=item sqrt()
+
+Caveat: may return [].
 
 =item longest_increasing()
 
