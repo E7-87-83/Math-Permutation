@@ -4,8 +4,7 @@ use 5.010;
 use strict;
 use warnings;
 use Carp;
-use List::Util qw/tail any uniq none all sum first max min/;
-use feature 'say';
+use List::Util qw/tail reduce any uniq none all sum first max min/;
 
 
 # supportive math function
@@ -30,14 +29,25 @@ sub _factorial {
     return $ans;
 }
 
+sub eqv {
+    my $wrepr  = $_[0]->{_wrepr};
+    my $wrepr2 = $_[1]->{_wrepr};
+    my $n      = $_[0]->{_n};
+    my $n2     = $_[1]->{_n};
+    return 0 if $n != $n2;
+    my $check = 0;
+    for (0..$n-1) {
+        $check++ if $wrepr->[$_] == $wrepr2->[$_];
+    }
+    return $check == $n ? 1 : 0;
+}
+
 sub clone {
     my ($class) = @_;
     my $wrepr = $_[1]->{_wrepr};
     my $n = $_[1]->{_n};
-    bless {
-        _wrepr => $wrepr,
-        _n => $n,
-    }, $class;
+    $_[0]->{_wrepr} = $wrepr;
+    $_[0]->{_n} = $n;
 }
 
 sub init {
@@ -112,7 +122,7 @@ sub cycles {
     # begin: checking
     my $check = 1;
     for (@elements) {
-        if ($_ != int $_) {
+        if ($_ != int $_ || $_ <= 0) {
             $check = 0;
             last;
         }
@@ -146,6 +156,7 @@ sub cycles {
                 push @qp, $q[$p[$_-1]-1] for 1..$n;
                 @p = @qp;
             }
+            @qp = map { $qp[$_] == 0 ? $_+1 : $qp[$_] } (0..$n-1);
             $wrepr = [@qp];
         }
     }
@@ -169,7 +180,7 @@ sub _cycles_to_wrepr {
             $hash{$c->[0]} = $c->[0];
         }
     }
-    return [ map {$hash{$_}} (1..$n) ];
+    return [ map {$hash{$_} == 0 ? $_ : $hash{$_}} (1..$n) ];
 }
 
 sub cycles_with_len {
@@ -551,6 +562,16 @@ Return a string with cycles of $p. One-cycles are omitted.
 =item $p->sprint_cycles_full()
 
 Return a string with cycles of $p. One-cycles are included.
+
+=back
+
+=head2 CHECK EQUIVALENCE BETWEEN PERMUTATIONS
+
+=over 4
+
+=item $p->eqv($p_obj)
+
+Check if the permutation $q is equivalent to $p. Return 1 if yes, 0 otherwise.
 
 =back
 
