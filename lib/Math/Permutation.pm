@@ -569,7 +569,7 @@ Return a string with cycles of $p. One-cycles are included.
 
 =over 4
 
-=item $p->eqv($p_obj)
+=item $p->eqv($q)
 
 Check if the permutation $q is equivalent to $p. Return 1 if yes, 0 otherwise.
 
@@ -579,9 +579,9 @@ Check if the permutation $q is equivalent to $p. Return 1 if yes, 0 otherwise.
 
 =over 4
 
-=item $p->clone($p_obj)
+=item $p->clone($q)
 
-Clone the permutation $p_obj into $p.
+Clone the permutation $q into $p.
 
 =back
 
@@ -589,9 +589,9 @@ Clone the permutation $p_obj into $p.
 
 =over 4
 
-=item swap($i, $j)
+=item $p->swap($i, $j)
 
-Swap the values of $i-position and $j-position.
+Swap the values of $i-th position and $j-th position.
 
 =item $p->comp($q)
 
@@ -661,7 +661,7 @@ Return whether $p is an odd permutation. Return 1 or 0.
 
 =item $p->sgn()
 
-Return the signature of $p. +1 if $p is even, -1 if $p is odd.
+Return the signature of $p. Return +1 if $p is even, -1 if $p is odd.
 
 Another view is the determinant of the permutation matrix of $p.
 
@@ -777,7 +777,7 @@ Opensource resources:
 
 =back
 
-Non-opensource resources:
+General resources:
 
 =over 4
 

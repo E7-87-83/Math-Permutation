@@ -1,7 +1,6 @@
 use strict;
 use warnings;
-#use Math::Permutation;
-require "./Math-Permutation/lib/Math/Permutation.pm";
+use Math::Permutation;
 use Test::More tests => 16;
 use v5.10.0;
 

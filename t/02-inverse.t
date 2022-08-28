@@ -1,10 +1,8 @@
 use strict;
 use warnings;
-#use Math::Permutation;
-require "./Math-Permutation/lib/Math/Permutation.pm";
+use Math::Permutation;
 use Test::More tests => 8;
 use v5.10.0;
-#use feature 'say';
 
 my $id = Math::Permutation->cycles_with_len(10,[ () ]);
 for (1..8) {
