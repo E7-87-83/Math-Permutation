@@ -117,8 +117,11 @@ sub cycles {
             last;
         }
     }
-    unless (scalar uniq @elements == scalar @elements) {
-        $check = 0;
+    for (@cycles) {
+        if ((scalar uniq @{$_}) != (scalar @{$_})) {
+            $check = 0;
+            last;
+        }
     }
     if (!$check) {
         carp "Error in input representation. "
@@ -128,7 +131,23 @@ sub cycles {
     }
     # end: checking
     if ($check) {
-        $wrepr = _cycles_to_wrepr($n, [@cycles])
+        if ((scalar uniq @elements) == (scalar @elements)) {
+            $wrepr = _cycles_to_wrepr($n, [@cycles]);
+        }
+        else {
+            # composition operation
+            my @ws;
+            @ws = map {_cycles_to_wrepr($n, [ $_ ] ) } @cycles;
+            my @qp;
+            my @p = $ws[-1]->@*;
+            for my $j (2..scalar @cycles) {
+                @qp = ();
+                my @q = $ws[-$j]->@*;
+                push @qp, $q[$p[$_-1]-1] for 1..$n;
+                @p = @qp;
+            }
+            $wrepr = [@qp];
+        }
     }
     bless {
         _wrepr => $wrepr,
@@ -149,9 +168,6 @@ sub _cycles_to_wrepr {
         elsif (scalar @{$c} == 1) {
             $hash{$c->[0]} = $c->[0];
         }
-    }
-    foreach (keys %hash) {
-        $hash{$_} = $_ if ($hash{$_} == 0);
     }
     return [ map {$hash{$_}} (1..$n) ];
 }
@@ -544,7 +560,7 @@ Return a string with cycles of $p. One-cycles are included.
 
 =item $p->clone($p_obj)
 
-clone the permutation $p_obj into $p.
+Clone the permutation $p_obj into $p.
 
 =back
 
