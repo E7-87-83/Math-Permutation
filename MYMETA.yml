@@ -4,10 +4,10 @@ author:
   - 'Cheok-Yin Fung <fungcheokyin@gmail.com>'
 build_requires:
   ExtUtils::MakeMaker: '0'
-  Test::More: '0.88'
+  Test::More: '0'
 configure_requires:
   ExtUtils::MakeMaker: '0'
-dynamic_config: 1
+dynamic_config: 0
 generated_by: 'ExtUtils::MakeMaker version 7.70, CPAN::Meta::Converter version 2.150010'
 license: mit
 meta-spec:
@@ -27,5 +27,5 @@ resources:
   homepage: https://github.com/E7-87-83/Math-Permutation
   license: https://mit-license.org/
   repository: https://github.com/E7-87-83/Math-Permutation.git
-version: '0.021'
+version: '0.0201'
 x_serialization_backend: 'CPAN::Meta::YAML version 0.018'

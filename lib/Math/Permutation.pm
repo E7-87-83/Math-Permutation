@@ -505,11 +505,11 @@ Math::Permutation - pure Perl implementation of functions related to the permuta
  
 =head1 VERSION
  
-Version 0.0201
+Version 0.021
  
 =cut
  
-our $VERSION = '0.0201';
+our $VERSION = '0.021';
 
 =head1 SYNOPSIS
 
@@ -815,10 +815,6 @@ You can also look for information at:
 =item * RT: CPAN's request tracker (report bugs here)
 
 L<https://rt.cpan.org/NoAuth/Bugs.html?Dist=Math-Permutation>
-
-=item * CPAN Ratings
-
-L<https://cpanratings.perl.org/d/Math-Permutation>
 
 =item * Search CPAN
 
