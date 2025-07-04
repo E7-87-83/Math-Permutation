@@ -1,14 +1,10 @@
 package Math::Permutation;
  
-use 5.024;
 use strict;
 use warnings;
 use Carp;
 use List::Util qw/tail reduce any uniq none all sum first max min pairs mesh/;
 
-
-use Data::Printer;
- 
 # supportive math function
 sub _lcm {
     return reduce { $a*$b/_gcd($a,$b) } @_;
@@ -202,11 +198,12 @@ sub sprint_wrepr {
 sub sprint_tabular {
     my $n = $_[0]->{_n};
     my $digit_len = length $n;
-    return "|" . (join " ", map {sprintf("%*s", $digit_len, $_)} 1..$n )
-    . "|" . "\n"
-    ."|"
-    . (join " ", map {sprintf("%*s", $digit_len, $_)} $_[0]->{_wrepr}->@* )
-    . "|";
+    return 
+          "|" . (join " ", map {sprintf("%*s", $digit_len, $_)} 1..$n )
+        . "|" . "\n"
+        ."|"
+        . (join " ", map {sprintf("%*s", $digit_len, $_)} $_[0]->{_wrepr}->@* )
+        . "|";
 }
  
 sub sprint_cycles {
@@ -385,7 +382,7 @@ sub rank {
 # rank() and unrank($n, $i) using
 # O(n^2) solution, translation of Python code on
 # https://tryalgo.org/en/permutations/2016/09/05/permutation-rank/
- 
+
 sub index {
     my $n = $_[0]->{_n};
     my @w = $_[0]->{_wrepr}->@*;
@@ -508,11 +505,11 @@ Math::Permutation - pure Perl implementation of functions related to the permuta
  
 =head1 VERSION
  
-Version 0.02
+Version 0.0201
  
 =cut
  
-our $VERSION = '0.02';
+our $VERSION = '0.0201';
 
 =head1 SYNOPSIS
 
@@ -597,6 +594,8 @@ Initialize $p by the cycle notation. If the length is not specific, the length w
 =item $p->unrank($n, $i)
 
 Initialize $p referring to the lexicological rank of all $n-permutations. $i must be between 1 and $n!.
+
+Note: The current version is not optimal. It is using an O(n^2) implementation, instead of the best O(n log n) implementation.
 
 =item $p->random($n)
 
@@ -706,6 +705,8 @@ Return the length of $p.
 =item $p->rank()
 
 Return the lexicological rank of $p. See $p->unrank($n, $i).
+
+Note: The current version is not optimal. It is using an O(n^2) implementation, instead of the best O(n log n) implementation.
 
 =item $p->index()
 
@@ -856,12 +857,11 @@ General resources:
 
 =head1 LICENSE AND COPYRIGHT
 
-This software is Copyright (c) 2022-2023 by Cheok-Yin Fung.
+This software is Copyright (c) 2022-2025 by Cheok-Yin Fung.
 
 This is free software, licensed under:
 
   MIT License
-
 
 =cut
 

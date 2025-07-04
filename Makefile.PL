@@ -9,7 +9,7 @@ my %WriteMakefileArgs = (
     VERSION_FROM     => 'lib/Math/Permutation.pm',
     ABSTRACT_FROM    => 'lib/Math/Permutation.pm',
     LICENSE          => 'mit',
-    MIN_PERL_VERSION => '5.024',
+    MIN_PERL_VERSION => '5.025',
     CONFIGURE_REQUIRES => {
         'ExtUtils::MakeMaker' => '0',
     },
