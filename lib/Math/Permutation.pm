@@ -505,11 +505,11 @@ Math::Permutation - pure Perl implementation of functions related to the permuta
  
 =head1 VERSION
  
-Version 0.0211
+Version 0.0212
  
 =cut
  
-our $VERSION = '0.0211';
+our $VERSION = '0.0212';
 
 =head1 SYNOPSIS
 
